@@ -56,6 +56,7 @@
                 :value-type (choice
                              (const :tag "GitHub" "github")
                              (const :tag "GitLab" "gitlab")
+                             (const :tag "Gerrit/Gitiles" "gitiles")
                              (const :tag "Bitbucket" "bitbucket")
                              (const :tag "Stash/Bitbucket Server" "stash")
                              (const :tag "git.savannah.gnu.org" "gnu")
@@ -219,6 +220,24 @@ If HEAD is detached, return nil."
   (let ((formatter (intern (format "browse-at-remote--format-%s-as-%s" formatter-type remote-type))))
     (if (fboundp formatter)
         formatter nil)))
+
+(defun browse-at-remote-gitiles-format-url (repo-url)
+  "Get a gitiles formatted URL."
+  (replace-regexp-in-string
+   (concat "https://" (car (rassoc "gitiles" browse-at-remote-remote-type-domains))
+           "\\(/\\).*\\'")
+   "/plugins/gitiles/" repo-url t nil 1))
+
+(defun browse-at-remote--format-region-url-as-gitiles (repo-url location filename &optional linestart lineend)
+  "URL formatter for gitiles."
+  (let ((repo-url (browse-at-remote-gitiles-format-url repo-url)))
+    (cond
+     (linestart (format "%s/+/%s/%s#%d" repo-url location filename linestart))
+     (t (format "%s/+/%s/%s" repo-url location filename)))))
+
+(defun browse-at-remote--format-commit-url-as-gitiles (repo-url commithash)
+  "Commit URL formatted for gitiles"
+  (format "%s/+/%s" (browse-at-remote-gitiles-format-url repo-url) commithash))
 
 (defun browse-at-remote-gnu-format-url (repo-url)
   "Get a gnu formatted URL."
